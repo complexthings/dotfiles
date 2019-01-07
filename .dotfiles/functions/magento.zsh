@@ -104,7 +104,7 @@ m2getclouddb() {
 
     __echo_blue "Getting DB from Magneto Cloud Environment: $MAGENTO_CLOUD_ENVIRONMENT"
 
-    magec db:dump -t -f $CLIENT_CODE.sql.gz -d $DUMP_DESTINATION -z -e $MAGENTO_CLOUD_ENVIRONMENT
+    magec db:dump -f $CLIENT_CODE.sql.gz -d $DUMP_DESTINATION -z -e $MAGENTO_CLOUD_ENVIRONMENT
 }
 
 #####################################################################
@@ -206,4 +206,36 @@ m2-setup-local() {
     
     __echo_green "Setting web/cookie/cookie_domain to ''"
     bmage config:set web/cookie/cookie_domain ''
+
+    __echo_red "Please Manually Change your URLS in core_config_data."
+    __echo_red "When you have finished, press RETURN"
+
+    read -n 1
+
+    bmage-cache && bmage-up && bmage indexer:reindex
+}
+
+m2-cloud-setup-local() {
+    local CLIENT_CODE=$1
+    local MAGENTO_CLOUD_ENVIRONMENT=staging
+    local DUMP_DESTINATION=$BA_SITES_DIR/$BA_DB_DIR/$CLIENT_CODE
+    local DB_NAME=$CLIENT_CODE_db
+
+    if [[ -n $2 ]]; then
+        MAGENTO_CLOUD_ENVIRONMENT=$2
+    fi
+
+    m2getclouddb $1 $2
+    valet db import $DUMP_DESTINATION/$CLIENT_CODE.sql.gz $DB_NAME
+    
+    m2getcloudmedia $MAGENTO_CLOUD_ENVIRONMENT
+
+    __echo_red "Please update your app/etc/env.php to point to the DB $DB_NAME"
+    __echo_red "When you have finished, press RETURN"
+
+    code app/etc/env.php
+
+    read -n 1
+    
+    m2-local-setup
 }
