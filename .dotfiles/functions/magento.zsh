@@ -41,6 +41,10 @@ m2clearcache() {
         pub/static/deployed_version.txt \
         $pubPath
 
+    if [[ -n $2 ]]; then
+        rm -rf pub/static/frontend/$2 
+    fi
+
     ansi --green $staticMessage
 
     redis-cli flushall
@@ -161,11 +165,22 @@ m2-start-development() {
         FRONTEND_BUILD_TOOL=$1
     fi 
 
-    m2clearcache \
-        && composer update \
-        && bmage-up \
-        && bmage-deploy \
-        && $FRONTEND_BUILD_TOOL
+    m2clearcache
+
+    __echo_green "Updating Node Packages"
+    npm update
+
+    __echo_green "Updating Composer Packages"
+    composer update
+
+    __echo_green "Running Setup:Upgrade"
+    bmage-up
+
+    __echo_green "Deploying Static Content"
+    bmage-deploy
+
+    __echo_green "Running Front-end Build Tools"
+    $FRONTEND_BUILD_TOOL
 }
 
 m2-fixes() {
@@ -212,7 +227,23 @@ m2-setup-local() {
 
     read -n 1
 
-    bmage-cache && bmage-up && bmage indexer:reindex
+    ansi
+
+    __echo_green "Cleaning Cache"
+
+    bmage-cache 
+    
+    ansi
+    
+    __echo_green "Running Setup:Upgrade"
+
+    bmage-up 
+    
+    ansi
+
+    __echo_green "Reindexing"
+
+    bmage indexer:reindex
 }
 
 m2-cloud-setup-local() {
@@ -224,6 +255,8 @@ m2-cloud-setup-local() {
     if [[ -n $2 ]]; then
         MAGENTO_CLOUD_ENVIRONMENT=$2
     fi
+
+    __echo_green "Importing DB $DUMP_DESTINATION/$CLIENT_CODE.sql.gz"
 
     m2getclouddb $1 $2
     valet db import $DUMP_DESTINATION/$CLIENT_CODE.sql.gz $DB_NAME
