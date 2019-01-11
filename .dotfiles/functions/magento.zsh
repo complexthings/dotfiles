@@ -204,6 +204,18 @@ m2-setup-local() {
         web/seo/use_rewrites
     )
 
+    __echo_green "Installing Composer Packages"
+
+    composer install
+
+    composer update
+    
+    __echo_green "Running Setup:Upgrade"
+
+    bmage-up 
+    
+    ansi
+
     for config in "${SET_TO_ZERO[@]}"
     do
         __echo_green "Setting $config to 0"
@@ -217,7 +229,7 @@ m2-setup-local() {
     done
 
     __echo_green "Setting admin/security/session_lifetime to 100000"
-    bmage config:set admin/security/session_lifetime 100000
+    bmage config:set admin/security/session_lifetime 1000000
     
     __echo_green "Setting web/cookie/cookie_domain to ''"
     bmage config:set web/cookie/cookie_domain ''
@@ -232,12 +244,6 @@ m2-setup-local() {
     __echo_green "Cleaning Cache"
 
     bmage-cache 
-    
-    ansi
-    
-    __echo_green "Running Setup:Upgrade"
-
-    bmage-up 
     
     ansi
 
@@ -270,5 +276,12 @@ m2-cloud-setup-local() {
 
     read -n 1
     
-    m2-local-setup
+    m2-setup-local
+}
+
+m2manage() {
+    local CLIENT_CODE=$1
+
+    g2sites _M2/_MANAGE/$CLIENT_CODE-manage
+    valet sourcetree
 }
