@@ -183,8 +183,15 @@ m2-start-development() {
     $FRONTEND_BUILD_TOOL
 }
 
+m2-fix-permissions() {
+    find var generated vendor pub/static pub/media app/etc -type f -exec chmod g+w {} +
+    find var generated vendor pub/static pub/media app/etc -type d -exec chmod g+ws {} +
+    chmod u+x bin/magento
+}
+
 m2-fixes() {
     bmage config:set web/seo/use_rewrites 1
+    m2-fix-permissions
 }
 
 m2-setup-local() {

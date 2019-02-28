@@ -3,6 +3,7 @@
 
 # Path to your oh-my-zsh installation.
 export ZSH=$HOME/.oh-my-zsh
+export TERM="xterm-256color"
 
 ZSH_DISABLE_COMPFIX=true
 
@@ -75,6 +76,7 @@ MAGENTO_CLI_TOOL="bin/magento"
 plugins=(
   git
   zsh-autosuggestions
+  zsh-syntax-highlighting
   colorize
   git-extras
   osx
@@ -190,3 +192,9 @@ export PATH="$HOME/"'.magento-cloud/bin':"$PATH"
 if [ -f "$HOME/"'.magento-cloud/shell-config.rc' ]; then . "$HOME/"'.magento-cloud/shell-config.rc'; fi # END SNIPPET
 
 screenfetch
+
+export PATH="/usr/local/opt/valet-php@7.1/bin:$PATH"
+export PATH="/usr/local/opt/valet-php@7.1/sbin:$PATH"
+export PATH="$PATH:/Users/greg/.badevops/bin"
+autoload -U +X bashcompinit && bashcompinit
+for __bootstrap_autofile in "/Users/greg/.badevops/lib/autocomplete.d/"*; do source "$__bootstrap_autofile"; done
