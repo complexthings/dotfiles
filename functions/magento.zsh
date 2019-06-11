@@ -231,6 +231,7 @@ m2-setup-local-config() {
         dev/js/enable_js_bundling 
         dev/static/sign 
         carriers/freeshipping/free_shipping_subtotal
+        admin/security/use_form_key
     )
 
     local SET_TO_ONE=(
@@ -251,6 +252,27 @@ m2-setup-local-config() {
         __echo_green "Setting $config to 1"
         __echo_black "bmage config:set $config 0"
         bmage config:set $config 1
+    done
+
+    bmage config:set admin/security/session_lifetime 518400
+    __echo_black "bmage config:set admin/security/session_lifetime 518400"
+    bmage config:set web/cookie/cookie_lifetime 14400
+    __echo_black "bmage config:set web/cookie/cookie_lifetime 14400"
+}
+
+m2-setup-local-config-locks() {
+    local SET_TO_ZERO=( 
+        dev/css/minify_files 
+        dev/js/minify_files 
+        dev/js/merge_files 
+        dev/static/sign 
+    )
+
+    for config in "${SET_TO_ZERO[@]}"
+    do
+        __echo_green "Setting $config to 0"
+        __echo_black "bmage config:set $config 0"
+        bmage config:set $config 0 --lock-env
     done
 }
 
@@ -332,6 +354,14 @@ m2-cloud-setup-local() {
     
     __echo_black "m2-setup-local"
     m2-setup-local
+}
+
+m2-sanitize() {
+    local DB_NAME=$1
+    local ASSET_FILE=~/.dotfiles/assets/m2-sanitize.sql
+
+    __echo_black "mysql -uroot -proot -h 127.0.0.1 $DB_NAME < $ASSET_FILE"
+    mysql -uroot -proot -h 127.0.0.1 $DB_NAME < $ASSET_FILE
 }
 
 m2manage() {
