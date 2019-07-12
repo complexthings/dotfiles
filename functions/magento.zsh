@@ -356,6 +356,15 @@ m2-cloud-setup-local() {
     m2-setup-local
 }
 
+m2-update-url() {
+    local DB_NAME=$1
+    local ORIGINAL_URL=$2
+    local NEW_URL=$3
+    
+    __echo_black "mysql -uroot -proot -h 127.0.0.1 -D $DB_NAME -e \"update core_config_data set value = replace(value, '$ORIGINAL_URL', '$NEW_URL') where path like '%url%';\""
+    mysql -uroot -proot -h 127.0.0.1 -D $DB_NAME -e "update core_config_data set value = replace(value, '$ORIGINAL_URL', '$NEW_URL') where path like '%url%';"
+}
+
 m2-sanitize() {
     local DB_NAME=$1
     local ASSET_FILE=~/.dotfiles/assets/m2-sanitize.sql
