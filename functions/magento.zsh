@@ -181,12 +181,12 @@ m2-start-development() {
     m2clearcache
 
     __echo_green "Updating Node Packages"
-    __echo_black "npm update"
-    npm update
+    __echo_black "npm install"
+    npm install
 
     __echo_green "Updating Composer Packages"
-    __echo_black "composer update"
-    composer update
+    __echo_black "composer install"
+    composer install
 
     __echo_green "Running Setup:Upgrade"
     __echo_black "bmage-up"
@@ -243,20 +243,20 @@ m2-setup-local-config() {
     for config in "${SET_TO_ZERO[@]}"
     do
         __echo_green "Setting $config to 0"
-        __echo_black "bmage config:set $config 0"
-        bmage config:set $config 0
+        __echo_black "bmage config:set $config 0 --lock-env"
+        bmage config:set $config 0 --lock-env
     done
 
     for config in "${SET_TO_ONE[@]}"
     do
         __echo_green "Setting $config to 1"
-        __echo_black "bmage config:set $config 0"
-        bmage config:set $config 1
+        __echo_black "bmage config:set $config 1 --lock-env"
+        bmage config:set $config 1 --lock-env
     done
 
-    bmage config:set admin/security/session_lifetime 518400
+    bmage config:set admin/security/session_lifetime 518400 --lock-env
     __echo_black "bmage config:set admin/security/session_lifetime 518400"
-    bmage config:set web/cookie/cookie_lifetime 14400
+    bmage config:set web/cookie/cookie_lifetime 14400 --lock-env
     __echo_black "bmage config:set web/cookie/cookie_lifetime 14400"
 }
 
@@ -281,9 +281,6 @@ m2-setup-local() {
 
     __echo_black "composer install"
     composer install
-
-    __echo_black "composer update"
-    composer update
     
     __echo_green "Running Setup:Upgrade"
 
@@ -378,4 +375,29 @@ m2manage() {
 
     g2sites _M2/_MANAGE/$CLIENT_CODE-manage
     valet sourcetree
+}
+
+m2-lighthouse() {
+    local URL=$1
+    local DEVICE=mobile
+
+    if [[ -n $2 ]]; then
+        DEVICE=$2
+    fi
+
+    __echo_black "lighthouse $URL --chrome-flags=\"--ignore-certificate-errors\" --output\"json\" --output=\"html\" --output-path=./lighthouse-results --emulated-form-factor=\"$DEVICE\" --only-categories=performance,accessibility --view"
+    lighthouse $URL --chrome-flags="--ignore-certificate-errors" --output="json" --output="html" --output-path=./lighthouse-results --emulated-form-factor="$DEVICE" --only-categories=performance,accessibility --view
+}
+
+m2cloudmerge() {
+    local MAGENTO_CLOUD_ENVIRONMENT=$1
+    __echo_black "magec environment:merge -e $MAGENTO_CLOUD_ENVIRONMENT"
+    magec environment:merge -e $MAGENTO_CLOUD_ENVIRONMENT
+}
+
+m2cloudcmd() {
+    local MAGNETO_CLOUD_ENVIRONMENT=$1
+    local CLOUD_COMMAND=$2
+    __echo_black "magento-cloud environment:ssh --environment $MAGENTO_CLOUD_ENVIRONMENT -- \"$2\""
+    magec environment:ssh --environment="$MAGENTO_CLOUD_ENVIRONMENT" -- $CLOUD_COMMAND
 }

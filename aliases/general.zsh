@@ -1,5 +1,5 @@
 # Alias to Run Composer Install & Updates
-alias recomposer="composer install && composer update"
+alias recomposer="composer install"
 
 # Alias to Refresh ZSH
 alias zrefresh="source ~/.zshrc"
