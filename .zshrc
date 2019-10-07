@@ -15,8 +15,8 @@ ZSH_THEME="powerlevel9k/powerlevel9k"
 # POWERLEVEL9K CONFIGURATION SETTINGS
 # -----------------------------------------------------------------------
 POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=(os_icon dir vcs)
-POWERLEVEL9K_MODE='awesome-patched'
-POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=(status docker_machine php_version node_version)
+POWERLEVEL9K_MODE='nerdfont-complete'
+POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=(status php_version node_version command_execution_time)
 
 # BASH VARIABLES
 # -----------------------------------------------------------------------
@@ -75,17 +75,17 @@ MAGENTO_CLI_TOOL="bin/magento"
 # Add wisely, as too many plugins slow down shell startup.
 plugins=(
   git
-  zsh-autosuggestions
-  zsh-syntax-highlighting
   colorize
   git-extras
   osx
-  bower
-  composer
   gitfast
-  grunt
   node
+  zsh-syntax-highlighting
 )
+
+# Including Final ZSH Pieces Needed
+fpath=(/usr/local/share/zsh-completions $fpath)
+source /usr/local/share/zsh-autosuggestions/zsh-autosuggestions.zsh
 
 export PATH=$HOME/bin:/usr/local/bin:$PATH
 export PATH=/usr/local/sbin:$PATH
@@ -182,19 +182,17 @@ source ~/.dotfiles/aliases.zsh
 # --------------------------------------------------------------------
 source ~/.dotfiles/functions.zsh
 
-# Including Final ZSH Pieces Needed
-fpath=(/usr/local/share/zsh-completions $fpath)
-source /usr/local/share/zsh-autosuggestions/zsh-autosuggestions.zsh
-
 # BEGIN SNIPPET: Magento Cloud CLI configuration
 HOME=${HOME:-'/Users/greg'}
 export PATH="$HOME/"'.magento-cloud/bin':"$PATH"
-if [ -f "$HOME/"'.magento-cloud/shell-config.rc' ]; then . "$HOME/"'.magento-cloud/shell-config.rc'; fi # END SNIPPET
+if [ -f "$HOME/"'.magento-cloud/shell-config.rc' ]; then . "$HOME/"'.magento-cloud/shell-config.rc'; fi 
+# END SNIPPET
 
-screenfetch
+source /usr/local/share/zsh-autosuggestions/zsh-autosuggestions.zsh
 
-export PATH="/usr/local/opt/valet-php@7.1/bin:$PATH"
-export PATH="/usr/local/opt/valet-php@7.1/sbin:$PATH"
-export PATH="$PATH:/Users/greg/.badevops/bin"
-autoload -U +X bashcompinit && bashcompinit
-for __bootstrap_autofile in "/Users/greg/.badevops/lib/autocomplete.d/"*; do source "$__bootstrap_autofile"; done
+# export PATH="/usr/local/opt/valet-php@7.1/bin:$PATH"
+# export PATH="/usr/local/opt/valet-php@7.1/sbin:$PATH"export PATH="/usr/local/opt/valet-php@7.0/bin:$PATH"
+# export PATH="/usr/local/opt/valet-php@7.0/sbin:$PATH"
+
+test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
+
