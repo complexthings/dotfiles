@@ -39,7 +39,6 @@ MAGENTO_CLI_TOOL="bin/magento"
 # Including Final ZSH Pieces Needed
 fpath=(/usr/local/share/zsh-completions $fpath)
 source /usr/local/share/zsh-autosuggestions/zsh-autosuggestions.zsh
-source /usr/local/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 
 plugins=(
   git
@@ -48,6 +47,7 @@ plugins=(
   osx
   gitfast
   node
+  zsh-syntax-highlighting
 )
 
 export PATH=$HOME/bin:/usr/local/bin:$PATH
