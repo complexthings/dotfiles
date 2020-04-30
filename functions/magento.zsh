@@ -238,6 +238,14 @@ m2-fix-permissions() {
     chmod u+x bin/magento
 }
 
+#####################################################################
+#   General Magento fixed, really just fixes SEO rewrites and
+#   runs the permissions fixes.
+#
+#   Usage:
+#   m2-fixes
+#####################################################################
+
 m2-fixes() {
     __echo_green "Running General Fixes"
     __echo_black "bmage config:set web/seo/use_rewrites 1"
@@ -246,6 +254,14 @@ m2-fixes() {
     __echo_black "m2-fix-permissions"
     m2-fix-permissions
 }
+
+#####################################################################
+#   Sets up Magento for local setting a ton of config values you
+#   would use on local if you want to know more read the function
+#
+#   Usage:
+#   m2-setup-local-config
+#####################################################################
 
 m2-setup-local-config() {
     local SET_TO_ZERO=( 
@@ -286,6 +302,15 @@ m2-setup-local-config() {
     __echo_black "bmage config:set web/cookie/cookie_lifetime 14400 --lock-env"
 }
 
+#####################################################################
+#   Locks a couple of config settings common to local dev to your
+#   env so when you run app:config:import or setup:upgrade they
+#   get processed.
+#
+#   Usage:
+#   m2-setup-local-config-locks
+#####################################################################
+
 m2-setup-local-config-locks() {
     local SET_TO_ZERO=( 
         dev/css/minify_files 
@@ -301,6 +326,13 @@ m2-setup-local-config-locks() {
         bmage config:set $config 0 --lock-env
     done
 }
+
+#####################################################################
+#   Runs a ton of commands related to setting up your local env
+#
+#   Usage:
+#   m2-setup-local
+#####################################################################
 
 m2-setup-local() {
     __echo_green "Installing Composer Packages"
@@ -346,6 +378,17 @@ m2-setup-local() {
     bmage indexer:reindex
 }
 
+#####################################################################
+#   Runs a ton of commands related to setting up your local env 
+#   when you're on a Magento Cloud site, gets DB, sync media, etc.
+#
+#   Usage:
+#   m2-cloud-setup-local $1 $2
+#   Arguments:
+#       $1  Client Code, used for naming DB mostly
+#       $2  (optional) Magento Cloud Environment you wish to source
+#####################################################################
+
 m2-cloud-setup-local() {
     local CLIENT_CODE=$1
     local MAGENTO_CLOUD_ENVIRONMENT=staging
@@ -379,6 +422,17 @@ m2-cloud-setup-local() {
     m2-setup-local
 }
 
+#####################################################################
+#   Simple find and replace for updating a URL
+#
+#   Usage:
+#   m2-update-url $1 $2 $3
+#   Arguments:
+#       $1  DB Name
+#       $2  URL you want to replace (or part of it)
+#       $3  URL you want as a replacement, eg. your local url
+#####################################################################
+
 m2-update-url() {
     local DB_NAME=$1
     local ORIGINAL_URL=$2
@@ -388,6 +442,15 @@ m2-update-url() {
     mysql -ugreg -pgreg -D $DB_NAME -e "update core_config_data set value = replace(value, '$ORIGINAL_URL', '$NEW_URL') where path like '%url%';"
 }
 
+#####################################################################
+#   Simple sanitization of your DB
+#
+#   Usage:
+#   m2-sanitize $1
+#   Arguments:
+#       $1  DB Name
+#####################################################################
+
 m2-sanitize() {
     local DB_NAME=$1
     local ASSET_FILE=~/.dotfiles/assets/m2-sanitize.sql
@@ -396,12 +459,15 @@ m2-sanitize() {
     mysql -ugreg -pgreg $DB_NAME < $ASSET_FILE
 }
 
-m2manage() {
-    local CLIENT_CODE=$1
-
-    g2sites _M2/_MANAGE/$CLIENT_CODE-manage
-    valet sourcetree
-}
+#####################################################################
+#   Runs lighthouse reports on a URL
+#
+#   Usage:
+#   m2-ligthouse $1 $2
+#   Arguments:
+#       $1  URL you wish to test
+#       $2 (optional) Device you wish to test on mobile or desktop
+#####################################################################
 
 m2-lighthouse() {
     local URL=$1
@@ -415,11 +481,15 @@ m2-lighthouse() {
     lighthouse $URL --chrome-flags="--ignore-certificate-errors" --output="json" --output="html" --output-path=./lighthouse-results --emulated-form-factor="$DEVICE" --only-categories=performance,accessibility,best-practices,seo,pwa --view
 }
 
-m2cloudmerge() {
-    local MAGENTO_CLOUD_ENVIRONMENT=$1
-    __echo_black "magec environment:merge -e $MAGENTO_CLOUD_ENVIRONMENT"
-    magec environment:merge -e $MAGENTO_CLOUD_ENVIRONMENT
-}
+#####################################################################
+#   Runs a bash command in Magento Cloud and returns the result
+#
+#   Usage:
+#   m2cloudcmd $1 $2
+#   Arguments:
+#       $1  Magento Cloud environment you wish to run command on
+#       $2 Commmand you wish to run
+#####################################################################
 
 m2cloudcmd() {
     local MAGNETO_CLOUD_ENVIRONMENT=$1

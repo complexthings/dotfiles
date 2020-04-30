@@ -4,6 +4,8 @@
 # Alias for N98 Magerun2
 alias n98="n98-magerun2.phar"
 
+alias n98-magerun="n98-magerun2.phar"
+
 # Alias to run Magento CLI Tool
 if [[ $MAGENTO_CLI_TOOL == "n98" ]]; then
     alias bmage="n98"
