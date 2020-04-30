@@ -12,6 +12,7 @@
 #   Arguments:
 #       $1  (optional) Theme you wish to clear static content for.
 #####################################################################
+
 m2clearcache() {
     local pubPath=pub/static/frontend/BlueAcorn
     local staticMessage="Static Content Cleaned ✅"
@@ -69,6 +70,7 @@ m2clearcache() {
 #   Arguments:
 #       $1  (optional) Theme Package/name, eg. BlueAcorn/site
 #####################################################################
+
 bmage-deploy() {
     local THEME_COMMAND=""
     local MESSAGE="Deploying Static Content"
@@ -97,6 +99,7 @@ bmage-deploy() {
 #       $2  (options) Magento Cloud Environment code you wish to pull
 #           the DB from, defaults to staging.
 #####################################################################
+
 m2getclouddb() {
     local CLIENT_CODE=$1
     local DUMP_DESTINATION=$BA_SITES_DIR/$BA_DB_DIR/$CLIENT_CODE
@@ -134,6 +137,7 @@ m2getclouddb() {
 #       $1  (options) Magento Cloud Environment code you wish to pull
 #           the Media from, defaults to staging.
 #####################################################################
+
 m2getcloudmedia() {
     local MAGENTO_CLOUD_ENVIRONMENT=staging
 
@@ -142,8 +146,8 @@ m2getcloudmedia() {
     fi
 
     __echo_blue "Getting Media from Magento Cloud Environment: $MAGENTO_CLOUD_ENVIRONMENT"
-    __echo_black "magec mount:download --exclude="catalog/product/cache" -m pub/media --target="pub/media" -e $MAGENTO_CLOUD_ENVIRONMENT"
-    magec mount:download --exclude="catalog/product/cache" -m pub/media --target="pub/media" -e $MAGENTO_CLOUD_ENVIRONMENT
+    __echo_black "magec mount:download --exclude="catalog/product/cache" --exclude="import" -m pub/media --target="pub/media" -e $MAGENTO_CLOUD_ENVIRONMENT"
+    magec mount:download --exclude="catalog/product/cache" --exclude="import" -m pub/media --target="pub/media" -e $MAGENTO_CLOUD_ENVIRONMENT
 }
 
 #####################################################################
@@ -158,6 +162,7 @@ m2getcloudmedia() {
 #       $1  (options) Magento Cloud Environment code you wish to pull
 #           the Media from, defaults to staging.
 #####################################################################
+
 m2cloudssh() {
     local MAGENTO_CLOUD_ENVIRONMENT=staging
 
@@ -170,8 +175,21 @@ m2cloudssh() {
     magec environment:ssh -e $MAGENTO_CLOUD_ENVIRONMENT
 }
 
+#####################################################################
+#   Kick off Magento development on your local, clear caches
+#   installs node packages, composer pacakges, runs setup:upgrade,
+#   deploys static content, just incase (mostly for admin) and runs
+#   front-end build tools
+#
+#   Usage:
+#   m2-start-development $1
+#   Arguments:
+#       $1  Accepts an alternate command to run at the end instead
+#           of build tools.
+#####################################################################
+
 m2-start-development() {
-    local FRONTEND_BUILD_TOOL=grunt
+    local FRONTEND_BUILD_TOOL=gulp
 
     if [[ -n $1 ]]; then
         FRONTEND_BUILD_TOOL=$1
@@ -200,6 +218,13 @@ m2-start-development() {
     __echo_black "$FRONTEND_BUILD_TOOL"
     $FRONTEND_BUILD_TOOL
 }
+
+#####################################################################
+#   General Magento permissions fixes.
+#
+#   Usage:
+#   m2-fix-permissions
+#####################################################################
 
 m2-fix-permissions() {
     __echo_green "Running Permissions Fixes"
@@ -238,6 +263,7 @@ m2-setup-local-config() {
         carriers/freeshipping/active
         payment/checkmo/active
         web/seo/use_rewrites
+        system/full_page_cache/caching_application
     )
 
     for config in "${SET_TO_ZERO[@]}"
@@ -255,9 +281,9 @@ m2-setup-local-config() {
     done
 
     bmage config:set admin/security/session_lifetime 518400 --lock-env
-    __echo_black "bmage config:set admin/security/session_lifetime 518400"
+    __echo_black "bmage config:set admin/security/session_lifetime 518400 --lock-env"
     bmage config:set web/cookie/cookie_lifetime 14400 --lock-env
-    __echo_black "bmage config:set web/cookie/cookie_lifetime 14400"
+    __echo_black "bmage config:set web/cookie/cookie_lifetime 14400 --lock-env"
 }
 
 m2-setup-local-config-locks() {
@@ -271,7 +297,7 @@ m2-setup-local-config-locks() {
     for config in "${SET_TO_ZERO[@]}"
     do
         __echo_green "Setting $config to 0"
-        __echo_black "bmage config:set $config 0"
+        __echo_black "bmage config:set $config 0 --lock-env"
         bmage config:set $config 0 --lock-env
     done
 }
@@ -293,12 +319,12 @@ m2-setup-local() {
     m2-setup-local-config
 
     __echo_green "Setting admin/security/session_lifetime to 100000"
-    __echo_black "bmage config:set admin/security/session_lifetime 1000000"
-    bmage config:set admin/security/session_lifetime 1000000
+    __echo_black "bmage config:set admin/security/session_lifetime 1000000 --lock-env"
+    bmage config:set admin/security/session_lifetime 1000000 --lock-env
     
     __echo_green "Setting web/cookie/cookie_domain to ''"
-    __echo_black "bmage config:set web/cookie/cookie_domain ''"
-    bmage config:set web/cookie/cookie_domain ''
+    __echo_black "bmage config:set web/cookie/cookie_domain '' --lock-env"
+    bmage config:set web/cookie/cookie_domain '' --lock-env
 
     __echo_red "Please Manually Change your URLS in core_config_data."
     __echo_red "When you have finished, press RETURN"
@@ -358,16 +384,16 @@ m2-update-url() {
     local ORIGINAL_URL=$2
     local NEW_URL=$3
     
-    __echo_black "mysql -uroot -proot -h 127.0.0.1 -D $DB_NAME -e \"update core_config_data set value = replace(value, '$ORIGINAL_URL', '$NEW_URL') where path like '%url%';\""
-    mysql -uroot -proot -h 127.0.0.1 -D $DB_NAME -e "update core_config_data set value = replace(value, '$ORIGINAL_URL', '$NEW_URL') where path like '%url%';"
+    __echo_black "mysql -ugreg -pgreg -D $DB_NAME -e \"update core_config_data set value = replace(value, '$ORIGINAL_URL', '$NEW_URL') where path like '%url%';\""
+    mysql -ugreg -pgreg -D $DB_NAME -e "update core_config_data set value = replace(value, '$ORIGINAL_URL', '$NEW_URL') where path like '%url%';"
 }
 
 m2-sanitize() {
     local DB_NAME=$1
     local ASSET_FILE=~/.dotfiles/assets/m2-sanitize.sql
 
-    __echo_black "mysql -uroot -proot -h 127.0.0.1 $DB_NAME < $ASSET_FILE"
-    mysql -uroot -proot -h 127.0.0.1 $DB_NAME < $ASSET_FILE
+    __echo_black "mysql -ugreg -pgreg $DB_NAME < $ASSET_FILE"
+    mysql -ugreg -pgreg $DB_NAME < $ASSET_FILE
 }
 
 m2manage() {
@@ -386,7 +412,7 @@ m2-lighthouse() {
     fi
 
     __echo_black "lighthouse $URL --chrome-flags=\"--ignore-certificate-errors\" --output\"json\" --output=\"html\" --output-path=./lighthouse-results --emulated-form-factor=\"$DEVICE\" --only-categories=performance,accessibility --view"
-    lighthouse $URL --chrome-flags="--ignore-certificate-errors" --output="json" --output="html" --output-path=./lighthouse-results --emulated-form-factor="$DEVICE" --only-categories=performance,accessibility --view
+    lighthouse $URL --chrome-flags="--ignore-certificate-errors" --output="json" --output="html" --output-path=./lighthouse-results --emulated-form-factor="$DEVICE" --only-categories=performance,accessibility,best-practices,seo,pwa --view
 }
 
 m2cloudmerge() {
