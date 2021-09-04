@@ -3,8 +3,8 @@
 
 #####################################################################
 #   Magento 2 Hard Cache Clean that empties: cache, full page cache,
-#   generated php file, deployed static content, requirejs files, 
-#   knockoutjs & phtml view_preprocessed files.  Also flushes redis 
+#   generated php file, deployed static content, requirejs files,
+#   knockoutjs & phtml view_preprocessed files.  Also flushes redis
 #   cache.
 #
 #   Usage:
@@ -23,7 +23,7 @@ m2clearcache() {
     rm -rf \
         var/cache \
         var/page_cache
-    
+
     __echo_green "Caches Cleaned ✅"
     __echo_black "rm -rf var/generation generated/code generated/metadata var/view_preprocessed"
 
@@ -32,7 +32,7 @@ m2clearcache() {
         generated/code \
         generated/metadata \
         var/view_preprocessed
-    
+
     __echo_green "Generated Code Cleaned ✅"
 
     if [[ -n $1 ]]; then
@@ -47,17 +47,31 @@ m2clearcache() {
 
     if [[ -n $2 ]]; then
         __echo_black "rm -rf pub/static/frontend/$2"
-        rm -rf pub/static/frontend/$2 
+        rm -rf pub/static/frontend/$2
     fi
 
     ansi --green $staticMessage
     __echo_black "redis-cli flushall"
 
-    redis-cli flushall
+    warden env exec -T redis redis-cli flushall
 
     __echo_green "Redis Cache Flushed"
 
     __echo_blue "Magento 2 Hard Cache Complete 💫"
+}
+
+nuke-it() {
+    local pubPath=pub/static
+    local themePath=frontend/BlueAcorn/site
+    if [[ -n $1 ]]; then
+        themePath=$1
+    fi
+    warden env exec php-fpm bash -c "rm -rf var/cache var/page_cache"
+    warden env exec php-fpm bash -c "rm -rf var/generation generated/code generated/metadata var/view_preprocessed"
+    warden env exec php-fpm bash -c "rm -rf pub/static/deployed_version.txt $pubPath/$themePath"
+    warden env exec php-fpm bash -c "bin/magento cache:flush"
+    warden env exec -T redis redis-cli flushall
+    warden env exec varnish bash -c 'varnishadm "ban req.url ~ /"'
 }
 
 #####################################################################
@@ -81,13 +95,13 @@ bmage-deploy() {
     fi
 
     __echo_blue $MESSAGE
-    __echo_black "bmage setup:static-content:deploy --jobs=5000 --force $THEME_COMMAND"
+    __echo_black "php -d memory_limit=-1 bin/magento setup:static-content:deploy --jobs=5000 --force $THEME_COMMAND"
 
-    bmage setup:static-content:deploy --jobs=5000 --force $THEME_COMMAND
+    warterm -d n98-magerun setup:static-content:deploy --jobs=5000 --force $THEME_COMMAND
 }
 
 #####################################################################
-#   Magento Cloud DB Download helper, takes CLIENT_CODE for 
+#   Magento Cloud DB Download helper, takes CLIENT_CODE for
 #   organization purposes and downloads a DB from a cloud environment
 #   into your $BA_SITES_DIR/$BA_DB_DIR/CLIENT_CODE
 #
@@ -108,7 +122,7 @@ m2getclouddb() {
     if [[ -n $2 ]]; then
         MAGENTO_CLOUD_ENVIRONMENT=$2
     fi
-    
+
     if [[ ! -d $DUMP_DESTINATION ]]; then
         if [[ ! -d $BA_SITES_DIR/$BA_DB_DIR ]]; then
             __echo_black "mkdir $BA_SITES_DIR/$BA_DB_DIR"
@@ -127,8 +141,8 @@ m2getclouddb() {
 
 #####################################################################
 #   Magento Cloud Media Download helper, takes environment name
-#   (optional, defualts to staging)  and downloads media from 
-#   pub/media directory into  local environment pub/media directory 
+#   (optional, defualts to staging)  and downloads media from
+#   pub/media directory into  local environment pub/media directory
 #   via rsync.
 #
 #   Usage:
@@ -146,14 +160,14 @@ m2getcloudmedia() {
     fi
 
     __echo_blue "Getting Media from Magento Cloud Environment: $MAGENTO_CLOUD_ENVIRONMENT"
-    __echo_black "magec mount:download --exclude="catalog/product/cache" --exclude="import" -m pub/media --target="pub/media" -e $MAGENTO_CLOUD_ENVIRONMENT"
-    magec mount:download --exclude="catalog/product/cache" --exclude="import" -m pub/media --target="pub/media" -e $MAGENTO_CLOUD_ENVIRONMENT
+    __echo_black "magec mount:download --exclude="catalog/product/cache" --exclude="*.pdf" --exclude="*.tgz" --exclude="*.tar" --exclude="*.gz" --exclude="*.tif" --exclude=".thumbswysiwyg" --exclude="*.csv" -m pub/media --target="pub/media" -e $MAGENTO_CLOUD_ENVIRONMENT"
+    magec mount:download --exclude="catalog/product/cache" --exclude="*.pdf" --exclude="*.tgz" --exclude="*.tar" --exclude="*.gz" --exclude="*.tif" --exclude=".thumbswysiwyg" --exclude="*.csv" -m pub/media --target="pub/media" -e $MAGENTO_CLOUD_ENVIRONMENT
 }
 
 #####################################################################
 #   Magento Cloud Media Download helper, takes environment name
-#   (optional, defualts to staging)  and downloads media from 
-#   pub/media directory into  local environment pub/media directory 
+#   (optional, defualts to staging)  and downloads media from
+#   pub/media directory into  local environment pub/media directory
 #   via rsync.
 #
 #   Usage:
@@ -193,7 +207,7 @@ m2-start-development() {
 
     if [[ -n $1 ]]; then
         FRONTEND_BUILD_TOOL=$1
-    fi 
+    fi
 
     __echo_black "m2clearcache"
     m2clearcache
@@ -204,11 +218,11 @@ m2-start-development() {
 
     __echo_green "Updating Composer Packages"
     __echo_black "composer install"
-    composer install
+    warterm composer install
 
     __echo_green "Running Setup:Upgrade"
     __echo_black "bmage-up"
-    bmage-up
+    war-up
 
     __echo_green "Deploying Static Content"
     __echo_black "bmage-deploy"
@@ -229,13 +243,13 @@ m2-start-development() {
 m2-fix-permissions() {
     __echo_green "Running Permissions Fixes"
     __echo_black "find var generated vendor pub/static pub/media app/etc -type f -exec chmod g+w {} +"
-    find var generated vendor pub/static pub/media app/etc -type f -exec chmod g+w {} +
+    warterm find var generated vendor pub/static pub/media app/etc -type f -exec chmod g+w {} +
 
     __echo_black "find var generated vendor pub/static pub/media app/etc -type f -exec chmod g+w {} +"
-    find var generated vendor pub/static pub/media app/etc -type d -exec chmod g+ws {} +
+    warterm find var generated vendor pub/static pub/media app/etc -type d -exec chmod g+ws {} +
 
     __echo_black "chmod u+x bin/magento"
-    chmod u+x bin/magento
+    warterm chmod u+x bin/magento
 }
 
 #####################################################################
@@ -249,7 +263,7 @@ m2-fix-permissions() {
 m2-fixes() {
     __echo_green "Running General Fixes"
     __echo_black "bmage config:set web/seo/use_rewrites 1"
-    bmage config:set web/seo/use_rewrites 1
+    warterm n98-magerun config:set web/seo/use_rewrites 1
 
     __echo_black "m2-fix-permissions"
     m2-fix-permissions
@@ -264,13 +278,13 @@ m2-fixes() {
 #####################################################################
 
 m2-setup-local-config() {
-    local SET_TO_ZERO=( 
-        dev/css/minify_files 
-        dev/css/merge_css_files 
-        dev/js/minify_files 
-        dev/js/merge_files 
-        dev/js/enable_js_bundling 
-        dev/static/sign 
+    local SET_TO_ZERO=(
+        dev/css/minify_files
+        dev/css/merge_css_files
+        dev/js/minify_files
+        dev/js/merge_files
+        dev/js/enable_js_bundling
+        dev/static/sign
         carriers/freeshipping/free_shipping_subtotal
         admin/security/use_form_key
     )
@@ -285,21 +299,21 @@ m2-setup-local-config() {
     for config in "${SET_TO_ZERO[@]}"
     do
         __echo_green "Setting $config to 0"
-        __echo_black "bmage config:set $config 0 --lock-env"
-        bmage config:set $config 0 --lock-env
+        __echo_black "warterm php n98-magerun config:set $config 0 --lock-env"
+        warterm php n98-magerun config:set $config 0 --lock-env
     done
 
     for config in "${SET_TO_ONE[@]}"
     do
         __echo_green "Setting $config to 1"
-        __echo_black "bmage config:set $config 1 --lock-env"
-        bmage config:set $config 1 --lock-env
+        __echo_black "warterm php n98-magerun config:set $config 1 --lock-env"
+        warterm php n98-magerun $config 1 --lock-env
     done
 
-    bmage config:set admin/security/session_lifetime 518400 --lock-env
-    __echo_black "bmage config:set admin/security/session_lifetime 518400 --lock-env"
-    bmage config:set web/cookie/cookie_lifetime 14400 --lock-env
-    __echo_black "bmage config:set web/cookie/cookie_lifetime 14400 --lock-env"
+    warterm php n98-magerun config:set admin/security/session_lifetime 518400 --lock-env
+    __echo_black "warterm php n98-magerun config:set admin/security/session_lifetime 518400 --lock-env"
+    warterm php n98-magerun config:set web/cookie/cookie_lifetime 14400 --lock-env
+    __echo_black "warterm php n98-magerun config:set web/cookie/cookie_lifetime 14400 --lock-env"
 }
 
 #####################################################################
@@ -312,11 +326,11 @@ m2-setup-local-config() {
 #####################################################################
 
 m2-setup-local-config-locks() {
-    local SET_TO_ZERO=( 
-        dev/css/minify_files 
-        dev/js/minify_files 
-        dev/js/merge_files 
-        dev/static/sign 
+    local SET_TO_ZERO=(
+        dev/css/minify_files
+        dev/js/minify_files
+        dev/js/merge_files
+        dev/static/sign
     )
 
     for config in "${SET_TO_ZERO[@]}"
@@ -339,12 +353,12 @@ m2-setup-local() {
 
     __echo_black "composer install"
     composer install
-    
+
     __echo_green "Running Setup:Upgrade"
 
     __echo_black "bmage-up"
-    bmage-up 
-    
+    bmage-up
+
     ansi
 
     __echo_black "m2-setup-local-config"
@@ -353,7 +367,7 @@ m2-setup-local() {
     __echo_green "Setting admin/security/session_lifetime to 100000"
     __echo_black "bmage config:set admin/security/session_lifetime 1000000 --lock-env"
     bmage config:set admin/security/session_lifetime 1000000 --lock-env
-    
+
     __echo_green "Setting web/cookie/cookie_domain to ''"
     __echo_black "bmage config:set web/cookie/cookie_domain '' --lock-env"
     bmage config:set web/cookie/cookie_domain '' --lock-env
@@ -368,8 +382,8 @@ m2-setup-local() {
     __echo_green "Cleaning Cache"
 
     __echo_black "bmage-cache"
-    bmage-cache 
-    
+    bmage-cache
+
     ansi
 
     __echo_green "Reindexing"
@@ -379,7 +393,7 @@ m2-setup-local() {
 }
 
 #####################################################################
-#   Runs a ton of commands related to setting up your local env 
+#   Runs a ton of commands related to setting up your local env
 #   when you're on a Magento Cloud site, gets DB, sync media, etc.
 #
 #   Usage:
@@ -400,13 +414,13 @@ m2-cloud-setup-local() {
     fi
 
     __echo_green "Importing DB $DUMP_DESTINATION/$CLIENT_CODE.sql.gz"
-    
+
     __echo_black "m2getclouddb $1 $2"
     m2getclouddb $1 $2
 
     __echo_black "valet db import $DUMP_DESTINATION/$CLIENT_CODE.sql.gz $DB_NAME"
     valet db import $DUMP_DESTINATION/$CLIENT_CODE.sql.gz $DB_NAME
-    
+
     __echo_black "m2getcloudmedia $MAGENTO_CLOUD_ENVIRONMENT"
     m2getcloudmedia $MAGENTO_CLOUD_ENVIRONMENT
 
@@ -417,7 +431,7 @@ m2-cloud-setup-local() {
     code app/etc/env.php
 
     read -n 1
-    
+
     __echo_black "m2-setup-local"
     m2-setup-local
 }
@@ -437,7 +451,7 @@ m2-update-url() {
     local DB_NAME=$1
     local ORIGINAL_URL=$2
     local NEW_URL=$3
-    
+
     __echo_black "mysql -ugreg -pgreg -D $DB_NAME -e \"update core_config_data set value = replace(value, '$ORIGINAL_URL', '$NEW_URL') where path like '%url%';\""
     mysql -ugreg -pgreg -D $DB_NAME -e "update core_config_data set value = replace(value, '$ORIGINAL_URL', '$NEW_URL') where path like '%url%';"
 }
@@ -496,4 +510,9 @@ m2cloudcmd() {
     local CLOUD_COMMAND=$2
     __echo_black "magento-cloud environment:ssh --environment $MAGENTO_CLOUD_ENVIRONMENT -- \"$2\""
     magec environment:ssh --environment="$MAGENTO_CLOUD_ENVIRONMENT" -- $CLOUD_COMMAND
+}
+
+bmage-deploy-admin() {
+    __echo_black "php -d memory_limit=-1 bin/magento setup:static-content:deploy --area=adminhtml --jobs=10 --force --symlink-locale --no-html-minify"
+    php -d memory_limit=-1 bin/magento setup:static-content:deploy --area=adminhtml --jobs=10 --force --symlink-locale --no-html-minify
 }

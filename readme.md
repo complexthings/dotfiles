@@ -1,8 +1,50 @@
-Shortcut for `bin/magento` = `bmage`
+# Macbook Dotfiles for Magento Development
 
-Shortcut for `bin/magento setup:static-content:deploy --jobs=500 -f` = `bmage-deploy`
+## Table of Contents
 
-Shortcut for `bin/magento setup:upgrade` = `bmage-up`
+## Requirements
 
-When switching branches <br>
-`m2-start-development gulp`
+In general this is written for Mac so we'll assume you have one of those, 
+you should have the following installed.
+
+- [Magento Cloud CLI Tool (if you use Magento Cloud)](https://devdocs.magento.com/cloud/reference/cli-ref-topic.html)
+- ZSH (recommend [Oh My ZSH](https://ohmyz.sh/))
+- [NodeJS](https://nodejs.org/en/)
+- [ImageOptim](https://imageoptim.com/mac) (for the Image functions)
+
+## Installation
+
+Clone the repo to your prefered directory and run the following command:
+
+```bash
+$: sh setup.sh
+```
+
+This will install 2 additional apps [ansi](https://github.com/fidian/ansi) and [Google Lighthouse](https://github.com/GoogleChrome/lighthouse) if you don't already have them.
+
+Echos a bunch of information to `~/.zprofile` which you should source in your `.zshrc` file with:
+
+```bash
+source ~/.zprofile
+```
+
+## Aliases
+
+| Command       | Alias for or Purpose                                                         |
+|---------------|------------------------------------------------------------------------------|
+| `recomposer`  | `composer install`                                                           |
+| `zrefresh`    | `source ~/.zshrc`                                                            |
+| `zrf`         | `zrefresh`                                                                   |
+| `n98`         | `n98-magerun2.phar`                                                          |
+| `n98-magerun` | `n98-magerun2.phar`                                                          |
+| `bmage`       | `n98` if that's set as your `$MAGENTO_CLI_TOOL` default is `php bin/magento` |
+| `magec`       | `magento-cloud`                                                              |
+| `bmage-cache` | `bmage cache:flush`                                                          |
+| `bmage-dev`   | `m2-start-development`                                                       |
+| `bmage-fixes` | `m2-fixes`                                                                   |
+| `bmage-local` | `m2-setup-local`                                                             |
+| `magec-db`    | `m2getcloudbdb`                                                              |
+| `magec-media` | `m2getcloudmedia`                                                            |
+| `magec-ssh`   | `m2cloudssh`                                                                 |
+
+## Functions

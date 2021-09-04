@@ -14,7 +14,8 @@ else
 fi
 
 # Alias for Magento2 Setup Static Content Deploy
-alias bmage-up="bmage setup:upgrade"
+alias bmage-up="php -d memory_limit=-1 bin/magento setup:upgrade"
+alias war-up="warterm php -d memory_limit=-1 bin/magento setup:upgrade"
 
 # Alais to run Magento Cloud CLI Tool
 alias magec="magento-cloud"

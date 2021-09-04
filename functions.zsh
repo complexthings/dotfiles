@@ -8,5 +8,4 @@ source ~/.dotfiles/functions/magento.zsh
 
 # MISC
 source ~/.dotfiles/functions/docker.zsh
-source ~/.dotfiles/functions/downstream.zsh
 source ~/.dotfiles/functions/images.zsh
